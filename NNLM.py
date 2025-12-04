@@ -64,7 +64,7 @@ class RNNModel(nn.Module):
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """
         inputs: (batch_size, seq_len)
-        outputs: (batch_size, seq_len, embed_size)
+        outputs: (batch_size, vocab_size)
         """
         embeds = self.embedding(inputs)  # (batch_size, seq_len, embed_size)
 
@@ -75,7 +75,8 @@ class RNNModel(nn.Module):
         # CrossEntropyLoss in PyTorch (applies Softmax)
         # nn.LogSoftmax + nn.NLLLoss (negative log likelihood loss)
         # -> No Softmax in last layer!
-        return outputs
+        # Use the last time step's output for classification
+        return outputs[:, -1, :]
 
 
 # Self-Attention NNLM
@@ -107,7 +108,7 @@ class SelfAttentionNNLM(nn.Module):
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """
         inputs: (batch_size, seq_len)
-        outputs: (batch_size, seq_len, embed_size)
+        outputs: (batch_size, vocab_size)
         """
         embeds = self.embeddings(inputs)  # (batch_size, seq_len, embed_size)
 
@@ -126,4 +127,5 @@ class SelfAttentionNNLM(nn.Module):
         # CrossEntropyLoss in PyTorch (applies Softmax)
         # nn.LogSoftmax + nn.NLLLoss (negative log likelihood loss)
         # -> No Softmax in last layer!
-        return outputs  # (batch_size, seq_len, embed_size)
+        # Use the last time step's output for classification
+        return outputs[:, -1, :]

@@ -7,10 +7,10 @@ import jieba
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from utils import read_file, clean_text
+from utils import read_file
 from constants import MIN_FREQ
 
-corpus_files = ["data/train_corpus.txt", "data/test_corpus.txt"]
+corpus_files = ["data/train.txt", "data/test.txt"]
 
 word_counts = Counter()
 for file in corpus_files:
@@ -37,9 +37,9 @@ def get_loader(
         for line in f:
             words = [w for w in jieba.lcut(line) if re.search(r"[\u4e00-\u9fff]", w)]
             # Option1: non-overlapping to create (context, target) pairs
-            for i in tqdm(range(context_size, len(words), context_size)):
+            for i in range(context_size, len(words), context_size):
             # Option2: slidding window to create (context, target) pairs
-            # for i in tqdm(range(context_size, len(words))):
+            # for i in range(context_size, len(words)):
                 context = [word_to_ix[words[j]] for j in range(i - context_size, i) if words[j] in word_to_ix]
                 if len(context) == context_size and words[i] in word_to_ix:
                     target = word_to_ix[words[i]]

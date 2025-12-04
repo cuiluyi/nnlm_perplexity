@@ -5,8 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "debugpy>=1.8.17",
     "jieba>=0.42.1",
     "loguru>=0.7.3",
+    "numpy>=2.2.6",
     "omegaconf>=2.3.0",
     "torch>=2.9.1",
     "tqdm>=4.67.1",
