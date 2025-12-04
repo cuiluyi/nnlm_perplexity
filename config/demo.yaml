@@ -1,0 +1,7 @@
+embed_size: 50
+hidden_size: 100
+context_size: 3
+epochs: 20
+learning_rate: 0.01
+batch_size: 64
+logging_steps: 20
