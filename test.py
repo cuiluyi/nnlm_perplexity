@@ -1,11 +1,9 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from tqdm import tqdm
 
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 from loguru import logger
 from omegaconf import OmegaConf
 

@@ -85,23 +85,37 @@ class SelfAttentionNNLM(nn.Module):
         self,
         vocab_size: int,
         embed_size: int,
-        dim_feedforward: int = 2048,
+        hidden_size: int,
+        context_size: int,
         num_heads: int = 1,
     ):
+        """Self-attention based NNLM with learned positional embeddings.
+
+        Args:
+            vocab_size: vocabulary size
+            embed_size: token embedding size
+            context_size: length of context (sequence length)
+            hidden_size: hidden size of the feedforward layer
+            num_heads: number of attention heads
+        """
         super().__init__()
         self.embeddings = nn.Embedding(vocab_size, embed_size)
+
+        # learned positional embeddings to inject order information
+        self.pos_embedding = nn.Embedding(context_size, embed_size)
+
         self.attention = nn.MultiheadAttention(
             embed_size,
             num_heads,
             batch_first=True,
         )
         self.norm1 = nn.LayerNorm(embed_size)
-        # the default value of dim_feedforward in PyTorch Transformer is 2048
-        # you can alse set it to other values, like 2 * embed_size
+        # the default value of hidden_size in PyTorch Transformer is 2048
+        # you can also set it to other values, like 2 * embed_size
         self.ffn = nn.Sequential(
-            nn.Linear(embed_size, dim_feedforward),
+            nn.Linear(embed_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(dim_feedforward, embed_size),
+            nn.Linear(hidden_size, embed_size),
         )
         self.norm2 = nn.LayerNorm(embed_size)
         self.output_layer = nn.Linear(embed_size, vocab_size)
@@ -111,7 +125,17 @@ class SelfAttentionNNLM(nn.Module):
         inputs: (batch_size, seq_len)
         outputs: (batch_size, vocab_size)
         """
+        nn.Transformer
         embeds = self.embeddings(inputs)  # (batch_size, seq_len, embed_size)
+
+        # add positional embeddings so attention can use order information
+        # inputs: (batch_size, seq_len)
+        batch_size, seq_len, _ = embeds.size()
+        # create position ids [0, 1, ..., seq_len-1] and expand to batch
+        pos_ids = torch.arange(seq_len, device=embeds.device).unsqueeze(0).expand(batch_size, -1)
+        pos_embeds = self.pos_embedding(pos_ids)  # (batch_size, seq_len, embed_size)
+
+        embeds = embeds + pos_embeds
 
         # Self-attention mechanism
         attn_output, _ = self.attention(embeds, embeds, embeds)  # (batch_size, seq_len, embed_size)
