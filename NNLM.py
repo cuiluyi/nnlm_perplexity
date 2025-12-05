@@ -104,6 +104,7 @@ class SelfAttentionNNLM(nn.Module):
             nn.Linear(dim_feedforward, embed_size),
         )
         self.norm2 = nn.LayerNorm(embed_size)
+        self.output_layer = nn.Linear(embed_size, vocab_size)
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """
@@ -122,7 +123,9 @@ class SelfAttentionNNLM(nn.Module):
         x = self.ffn(attn_output)  # (batch_size, seq_len, embed_size)
 
         # Add & Norm
-        outputs = self.norm2(x + attn_output)  # (batch_size, seq_len, embed_size)
+        x = self.norm2(x + attn_output)  # (batch_size, seq_len, embed_size)
+
+        outputs = self.output_layer(x)  # (batch_size, seq_len, vocab_size)
 
         # CrossEntropyLoss in PyTorch (applies Softmax)
         # nn.LogSoftmax + nn.NLLLoss (negative log likelihood loss)

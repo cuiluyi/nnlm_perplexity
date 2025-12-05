@@ -1,5 +1,6 @@
-from tqdm import tqdm
 from argparse import ArgumentParser
+from pathlib import Path
+from tqdm import tqdm
 
 import torch
 import torch.nn as nn
@@ -30,7 +31,7 @@ def test_NNLM(
         outputs = model(inputs)
 
         # Use the last time step's output for classification
-        loss = criterion(outputs[:, -1, :], labels)
+        loss = criterion(outputs, labels)
         running_loss += loss.item()
 
     avg_loss = running_loss / len(test_loader)
@@ -41,24 +42,55 @@ def test_NNLM(
 def main():
     parser = ArgumentParser(description="Train Word Vectors")
     parser.add_argument(
-        "--config",
+        "--recipe",
         type=str,
-        default="config/demo.yaml",
+        default="recipes/demo.yaml",
         help="Path to the training configuration YAML file",
     )
     args = parser.parse_args()
 
-    config = OmegaConf.load(args.config)
-    model = FFNModel(
-        vocab_size,
-        config.embed_size,
-        config.hidden_size,
-        config.context_size,
-    ).to(device)
+    config = OmegaConf.load(args.recipe)
 
     train_loader = get_loader(
         data_path="data/train.txt",
         context_size=config.context_size,
         batch_size=config.batch_size,
     )
+
+    # FFNModel
+    logger.info("Testing FFNModel...")
+    model = FFNModel(
+        vocab_size,
+        config.embed_size,
+        config.hidden_size,
+        config.context_size,
+    ).to(device)
+    model_path = Path("ckpts/FFNModel/epoch10.pth")
+    model.load_state_dict(torch.load(model_path))
     test_NNLM(model, train_loader)
+
+    # RNNModel
+    logger.info("Testing RNNModel...")
+    model = RNNModel(
+        vocab_size,
+        config.embed_size,
+        config.hidden_size,
+    ).to(device)
+    model_path = Path("ckpts/RNNModel/epoch10.pth")
+    model.load_state_dict(torch.load(model_path))
+    test_NNLM(model, train_loader)
+
+    # SelfAttentionNNLM
+    logger.info("Testing SelfAttentionNNLM...")
+    model = SelfAttentionNNLM(
+        vocab_size,
+        config.embed_size,
+        config.hidden_size,
+        config.context_size,
+    ).to(device)
+    model_path = Path("ckpts/SelfAttentionNNLM/epoch10.pth")
+    model.load_state_dict(torch.load(model_path))
+    test_NNLM(model, train_loader)
+
+if __name__ == "__main__":
+    main()

@@ -15,7 +15,9 @@ corpus_files = ["data/train.txt", "data/test.txt"]
 word_counts = Counter()
 for file in corpus_files:
     text = read_file(file)
-    words = [w for w in jieba.lcut(text) if re.search(r"[\u4e00-\u9fff]", w)]
+    # words = [w for w in jieba.lcut(text) if re.search(r"[\u4e00-\u9fff]", w)]
+    words = [w for w in jieba.lcut(text)]
+
     # Build vocabulary (filter words with frequency < min_freq)
     word_counts.update(words)
 
@@ -35,11 +37,13 @@ def get_loader(
     data_targets = []
     with open(data_path, "r", encoding="utf-8") as f:
         for line in f:
-            words = [w for w in jieba.lcut(line) if re.search(r"[\u4e00-\u9fff]", w)]
+            # words = [w for w in jieba.lcut(line) if re.search(r"[\u4e00-\u9fff]", w)]
+            words = [w for w in jieba.lcut(line)]
+
             # Option1: non-overlapping to create (context, target) pairs
-            for i in range(context_size, len(words), context_size):
+            # for i in range(context_size, len(words), context_size):
             # Option2: slidding window to create (context, target) pairs
-            # for i in range(context_size, len(words)):
+            for i in range(context_size, len(words)):
                 context = [word_to_ix[words[j]] for j in range(i - context_size, i) if words[j] in word_to_ix]
                 if len(context) == context_size and words[i] in word_to_ix:
                     target = word_to_ix[words[i]]
