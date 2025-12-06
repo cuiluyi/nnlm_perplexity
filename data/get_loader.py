@@ -31,6 +31,7 @@ def get_loader(
     data_path: str | Path,
     context_size: int,
     batch_size: int,
+    shuffle: bool = True,
 ):
     # tokenize data into contexts and targets
     data_contexts = []
@@ -55,5 +56,5 @@ def get_loader(
         torch.tensor(data_contexts, dtype=torch.long),
         torch.tensor(data_targets, dtype=torch.long),
     )
-    dataloader = DataLoader(dataset, batch_size, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size, shuffle=shuffle)
     return dataloader

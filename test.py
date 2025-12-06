@@ -21,16 +21,17 @@ def test_NNLM(
     criterion = nn.CrossEntropyLoss()
 
     running_loss = 0.0
-    for inputs, labels in test_loader:
-        inputs = inputs.to(device)
-        labels = labels.to(device)
+    with torch.no_grad():
+        for inputs, labels in test_loader:
+            inputs = inputs.to(device)
+            labels = labels.to(device)
 
-        # Forward pass
-        outputs = model(inputs)
+            # Forward pass
+            outputs = model(inputs)
 
-        # Use the last time step's output for classification
-        loss = criterion(outputs, labels)
-        running_loss += loss.item()
+            # Use the last time step's output for classification
+            loss = criterion(outputs, labels)
+            running_loss += loss.item()
 
     avg_loss = running_loss / len(test_loader)
     perplexity = torch.exp(torch.tensor(avg_loss))
@@ -49,10 +50,12 @@ def main():
 
     config = OmegaConf.load(args.recipe)
 
-    train_loader = get_loader(
-        data_path="data/train.txt",
+    # Use the test set for evaluation and disable shuffling for deterministic perplexity
+    test_loader = get_loader(
+        data_path="data/test.txt",
         context_size=config.context_size,
         batch_size=config.batch_size,
+        shuffle=False,
     )
 
     # FFNModel
@@ -63,9 +66,10 @@ def main():
         config.hidden_size,
         config.context_size,
     ).to(device)
-    model_path = Path("ckpts/FFNModel/epoch10.pth")
-    model.load_state_dict(torch.load(model_path))
-    test_NNLM(model, train_loader)
+    for i in range(config.epochs):
+        model_path = Path(f"ckpts/FFNModel/epoch{i+1}.pth")
+        model.load_state_dict(torch.load(model_path))
+        test_NNLM(model, test_loader)
 
     # RNNModel
     logger.info("Testing RNNModel...")
@@ -74,9 +78,10 @@ def main():
         config.embed_size,
         config.hidden_size,
     ).to(device)
-    model_path = Path("ckpts/RNNModel/epoch10.pth")
-    model.load_state_dict(torch.load(model_path))
-    test_NNLM(model, train_loader)
+    for i in range(config.epochs):
+        model_path = Path(f"ckpts/RNNModel/epoch{i+1}.pth")
+        model.load_state_dict(torch.load(model_path))
+        test_NNLM(model, test_loader)
 
     # SelfAttentionNNLM
     logger.info("Testing SelfAttentionNNLM...")
@@ -84,11 +89,11 @@ def main():
         vocab_size,
         config.embed_size,
         config.hidden_size,
-        config.context_size,
     ).to(device)
-    model_path = Path("ckpts/SelfAttentionNNLM/epoch10.pth")
-    model.load_state_dict(torch.load(model_path))
-    test_NNLM(model, train_loader)
+    for i in range(config.epochs):
+        model_path = Path(f"ckpts/SelfAttentionNNLM/epoch{i+1}.pth")
+        model.load_state_dict(torch.load(model_path))
+        test_NNLM(model, test_loader)
 
 if __name__ == "__main__":
     main()

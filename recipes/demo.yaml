@@ -1,8 +1,7 @@
 embed_size: 128
 hidden_size: 256
 context_size: 4
-epochs: 10
+epochs: 30
 learning_rate: 0.001
 
 batch_size: 256
-logging_steps: 20

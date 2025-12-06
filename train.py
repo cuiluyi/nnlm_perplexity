@@ -62,6 +62,7 @@ def main():
         data_path="data/train.txt",
         context_size=config.context_size,
         batch_size=config.batch_size,
+        shuffle=True,
     )
 
     # FFNModel
@@ -90,7 +91,6 @@ def main():
         vocab_size,
         config.embed_size,
         config.hidden_size,
-        config.context_size,
     ).to(device)
     save_dir = Path("ckpts/SelfAttentionNNLM/")
     save_dir.mkdir(parents=True, exist_ok=True)
